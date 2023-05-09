@@ -76,13 +76,6 @@ appRouter.get('/postByDate/:startDate/:endDate', cors(), (req, res)=>{
                 posts.push(postsArray[item]);
             }
     })
-   /* var posts = Object.keys(postsArray).filter(function(key) {
-        return new Date(postsArray[key].last_update) > startDate && new Date(postsArray[key].last_update) < endDate;
-    }).reduce(function(obj, key){
-        obj[key] = postsArray[key];
-        return obj;
-    }, {});*/
-
     return res.send(posts);
 });
 
