@@ -5,11 +5,7 @@ import fs from'fs';
 
 const app = express();
 const port = 3000;
-const appRouter = express.Router();
-var data = fs.readFileSync('data.json');
-  
-const usersArray = JSON.parse(data).users;
-const postsArray = JSON.parse(data).posts;
+//var data = fs.readFileSync('data.json');
 
 app.use(bodyParser.urlencoded({
     extended: true
@@ -17,34 +13,45 @@ app.use(bodyParser.urlencoded({
 
 app.use(bodyParser.json({type: 'application/json'}));
 
-app.use("/app", appRouter);
-
 // GET = (userID) => po user ID-u da odgovor budu svi podaci o tom user-u
-appRouter.get('/user/:id', cors(), (req, res)=>{
-    const userId = req.params.id;
-    
-    var user = Object.keys(usersArray).filter(function(key) {
-        return usersArray[key].id == userId;
-    }).reduce(function(obj, key){
-         return usersArray[key];
-        
-    }, {});
+app.get('/user/:id', cors(), (req, res)=>{
+    var user = null;
 
-    return res.send(user);
+    fs.readFile("data.json", function (err, data) {
+        if (err) {
+            console.error(err); 
+        }
+
+        user = JSON.parse(data).users.filter(function(key) {
+            console.log("KEY: ", key);
+            return key.id == req.params.id;
+        }).reduce(function(obj, key){
+             return key;
+            
+        }, {});
+
+        return res.send(user);
+    });
 });
 
 // GET = (postID) => po post ID-u da odgovor budu svi podaci o tom post-u
-appRouter.get('/post/:id', cors(), (req, res)=>{
-    const postId = req.params.id;
+app.get('/post/:id', cors(), (req, res)=>{
+    var post = null;
     
-    var post = Object.keys(postsArray).filter(function(key) {
-        return postsArray[key].id == postId;
-    }).reduce(function(obj, key){
-         return postsArray[key];
+    fs.readFile("data.json", function (err, data) {
+        if (err) {
+            console.error(err); 
+        }
         
-    }, {});
+        post = JSON.parse(data).posts.filter(function(key) {
+            return key.id == req.params.id;
+        }).reduce(function(obj, key){
+             return key;
+            
+        }, {});
 
-    return res.send(post);
+        return res.send(post);
+    });
 });
 
 function formattedDate(date){
@@ -66,48 +73,53 @@ function formattedDate(date){
 }
 
 // GET = (DatumOd, DatumDo) => po dva datuma da odgovor budu svi post-ovi koji su u range-u ta dva datuma (npr. DatumOd: 2019-01-01, DatumDo: 2019-01-03)
-appRouter.get('/postByDate/:startDate/:endDate', cors(), (req, res)=>{
+app.get('/postByDate/:startDate/:endDate', cors(), (req, res)=>{
     const startDate = req.params.startDate;
     const endDate = req.params.endDate;
 
-    var posts = [];
-    Object.keys(postsArray).map((item)=>{
-            if ((formattedDate(postsArray[item].last_update) > formattedDate(startDate)) && (formattedDate(postsArray[item].last_update) < formattedDate(endDate))){
-                posts.push(postsArray[item]);
+    fs.readFile("data.json", function (err, data) {
+        if (err) {
+            console.error(err); 
+        }
+        
+        var posts = [];
+        JSON.parse(data).posts.map((item) => {
+            if ((formattedDate(item.last_update) > formattedDate(startDate)) && (formattedDate(item.last_update) < formattedDate(endDate))){
+                console.log("ITEMMM: ", item);
+                posts.push(item);
             }
-    })
-   /* var posts = Object.keys(postsArray).filter(function(key) {
-        return new Date(postsArray[key].last_update) > startDate && new Date(postsArray[key].last_update) < endDate;
-    }).reduce(function(obj, key){
-        obj[key] = postsArray[key];
-        return obj;
-    }, {});*/
+        })
 
-    return res.send(posts);
+        return res.send(posts);
+    });
+    
 });
 
 // POST = (userID, noviEmail) => koji dopusta mijenjanje email-a usera po user ID-u
-appRouter.post('/updateEmail/:id/:newMail', cors(), (req, res)=>{
-    const userId = req.params.id;
-    
-    let json = JSON.parse(data);
+app.put('/updateEmail/:id', cors(), (req, res)=>{
+    let json = JSON.parse(fs.readFileSync('data.json'));
 
-    Object.keys(usersArray).map((item, key) => {
-        if (parseInt(usersArray[item].id) === parseInt(userId)){
-            usersArray[item].email = req.params.newMail;
-            json.users[key] = usersArray[item];
-
-            try {
-                fs.writeFileSync("data.json", JSON.stringify(json, null, 2));
-                console.log("Data successfully saved");
-                return res.send(usersArray[item]);
-            } catch (error) {
-                console.log("An error has occurred ", error);
-            }
+    fs.readFile("data.json", function (err, data) {
+        if (err) {
+            console.error(err); 
         }
-    })
-    return null;
+
+        JSON.parse(data).users.map((item, key) => {
+            if ((item.id) === parseInt(req.params.id)){
+                item.email = req.body.email;
+                json.users[key] = item;
     
+                try {
+                    fs.writeFileSync("data.json", JSON.stringify(json, null, 2));
+                    console.log("Data successfully saved");
+                    return res.send(item);
+                } catch (error) {
+                    console.log("An error has occurred ", error);
+                }
+            }
+        })
+    });
+    return null;
 })
 
 function getCurrentDate(){
@@ -124,13 +136,10 @@ function getCurrentDate(){
 }
 
 // PUT = (userID, title, body) => koji dopustava kreiranje novog post-a (parametri bi bili; user ID, title, body)
-appRouter.put('/addPost/:userId/:title/:body', cors(), (req, res)=>{
-    let id = parseInt(Object.keys(postsArray).at(-1)) + 2;
-    let newPost = {"id": id, "title": req.params.title, "body": req.params.body, "user_id": req.params.userId, "last_update": getCurrentDate()}
-    console.log(newPost);
-
-    let json = JSON.parse(data);
-
+app.post('/addPost', cors(), (req, res)=>{
+    let json = JSON.parse(fs.readFileSync('data.json'));
+    let newPost = {"id": parseInt(json.posts.length + 1), "title": req.body.title, "body": req.body.body, "user_id": req.body.userId, "last_update": getCurrentDate()}
+    
     json.posts.push(newPost);
 
     try {
