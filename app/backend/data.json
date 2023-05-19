@@ -42,17 +42,9 @@
     },
     {
       "id": 5,
-      "title": "test",
-      "body": "testni",
-      "user_id": "1",
-      "last_update": "2023-05-09 14:43:34"
-    },
-    {
-      "id": 6,
-      "title": "test",
-      "body": "testni",
-      "user_id": "1",
-      "last_update": "2023-05-09 15:8:5"
+      "title": "Test title",
+      "body": "Test body",
+      "last_update": "2023-05-11 11:7:21"
     }
   ]
 }
