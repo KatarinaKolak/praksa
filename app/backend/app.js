@@ -187,7 +187,7 @@ function getRow1Style(ws, cell, align){
       };
 
     ws.getCell(cell).font = {
-        color: { argb: '000000'}
+        color: { argb: 'FF0000'}
     };
 }
 
@@ -205,10 +205,28 @@ function getRow2Style(ws, cell, align){
     };
 
     ws.getCell(cell).font = {
-        color: { argb: '000000'}
+        color: { argb: 'FF0000'}
     };
 }
 
+function getLastRow2Style(ws, cell, align){
+    ws.getCell(cell).alignment = {
+        vertical: 'middle', horizontal: align,
+        wrapText: true
+    };
+
+    ws.getCell(cell).border = {
+        top: {style:'medium', color: {argb:'000'}},
+        left: {style:'medium', color: {argb:'000'}},
+        bottom: {style:'medium', color: {argb:'000'}},
+        right: {style:'medium', color: {argb:'000'}}
+    };
+
+    ws.getCell(cell).font = {
+        bold: true,
+        color: { argb: 'FF0000'}
+    };
+}
 
 function setWidth(ws){
     ws.columns = [
@@ -330,7 +348,7 @@ app.post('/createExcel', cors(), async (req, res)=>{
                 ws.getCell('A5').value = {
                     'richText': [
                         {'font': {'color': {argb: '000000'}},'text': 'Predmet: '},
-                        {'font': {'color': {argb: '000000'}},'text': item.PredmetKratica + ' ' + item.PredmetNaziv}
+                        {'font': {'color': {argb: 'FF0000'}},'text': item.PredmetKratica + ' ' + item.PredmetNaziv}
                     ]
                 }
 
@@ -397,11 +415,11 @@ app.post('/createExcel', cors(), async (req, res)=>{
                 ws.getCell('H13').value = {
                     'richText': [
                         {'text': 'P:'},
-                        {'font': {'color': {argb: '000000'}},'text': getPSV(excelData)[0]},
+                        {'font': {'color': {argb: 'FF0000'}},'text': getPSV(excelData)[0]},
                         {'text': ' S:'},
-                        {'font': {'color': {argb: '000000'}},'text': getPSV(excelData)[1]},
+                        {'font': {'color': {argb: 'FF0000'}},'text': getPSV(excelData)[1]},
                         {'text': ' V:'},
-                        {'font': {'color': {argb: '000000'}},'text': getPSV(excelData)[2]}
+                        {'font': {'color': {argb: 'FF0000'}},'text': getPSV(excelData)[2]}
                     ]
                 };
 
@@ -505,19 +523,19 @@ app.post('/createExcel', cors(), async (req, res)=>{
 
                 getLastRowStyle(ws, 'D' + index, "center");
 
-                getLastRowStyle(ws, 'E' + index, "center");
+                getLastRow2Style(ws, 'E' + index, "center");
                 ws.getCell('E' + index).value = ukupnoPredavanja;
-                getLastRowStyle(ws, 'F' + index, "center");
+                getLastRow2Style(ws, 'F' + index, "center");
                 ws.getCell('F' + index).value = ukupnoSeminari;
-                getLastRowStyle(ws, 'G' + index, "center");
+                getLastRow2Style(ws, 'G' + index, "center");
                 ws.getCell('G' + index).value = ukupnoVjezbe;
-                getLastRowStyle(ws, 'H' + index, "center");
-                getLastRowStyle(ws, 'I' + index, "center");
-                getLastRowStyle(ws, 'J' + index, "center");
-                getLastRowStyle(ws, 'K' + index, "right");
-                getLastRowStyle(ws, 'L' + index, "right");
-                getLastRowStyle(ws, 'M' + index, "right");
-                getLastRowStyle(ws, 'N' + index, "right");
+                getLastRow2Style(ws, 'H' + index, "center");
+                getLastRow2Style(ws, 'I' + index, "center");
+                getLastRow2Style(ws, 'J' + index, "center");
+                getLastRow2Style(ws, 'K' + index, "right");
+                getLastRow2Style(ws, 'L' + index, "right");
+                getLastRow2Style(ws, 'M' + index, "right");
+                getLastRow2Style(ws, 'N' + index, "right");
 
                 ws.mergeCells('A' + (index + 3) +':C' + (index + 4));
                 ws.getCell('A' + (index + 3)).value = {
