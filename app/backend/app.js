@@ -151,175 +151,6 @@ app.post('/addPost', cors(), (req, res)=>{
     return res.send(newPost);
 })
 
-function getColumn1Style(ws, cell){
-    ws.getCell(cell).alignment = {
-        vertical: 'middle', horizontal: 'center',
-        wrapText: true
-    };
-
-    ws.getCell(cell).border = {
-        top: {style:'medium', color: {argb:'000'}},
-        left: {style:'medium', color: {argb:'000'}},
-        bottom: {style:'medium', color: {argb:'000'}},
-        right: {style:'medium', color: {argb:'000'}}
-      };
-
-    ws.getCell(cell).fill = {
-        type: 'pattern',
-        pattern:'solid',
-        fgColor:{argb:'eeeeee'}
-    };
-
-    ws.getCell(cell).font = {
-        bold: true
-    };
-}
-
-function getRow1Style(ws, cell, align){
-    ws.getCell(cell).alignment = {
-        vertical: 'middle', horizontal: align,
-        wrapText: true
-    };
-
-    ws.getCell(cell).border = {
-        bottom: {style:'medium', color: {argb:'000'}},
-        right: {style:'thin', color: {argb:'000'}}
-      };
-
-    ws.getCell(cell).font = {
-        color: { argb: 'FF0000'}
-    };
-}
-
-function getRow2Style(ws, cell, align){
-    ws.getCell(cell).alignment = {
-        vertical: 'middle', horizontal: align,
-        wrapText: true
-    };
-
-    ws.getCell(cell).border = {
-        top: {style:'thin', color: {argb:'000'}},
-        left: {style:'thin', color: {argb:'000'}},
-        bottom: {style:'thin', color: {argb:'000'}},
-        right: {style:'thin', color: {argb:'000'}}
-    };
-
-    ws.getCell(cell).font = {
-        color: { argb: 'FF0000'}
-    };
-}
-
-function getLastRow2Style(ws, cell, align){
-    ws.getCell(cell).alignment = {
-        vertical: 'middle', horizontal: align,
-        wrapText: true
-    };
-
-    ws.getCell(cell).border = {
-        top: {style:'medium', color: {argb:'000'}},
-        left: {style:'medium', color: {argb:'000'}},
-        bottom: {style:'medium', color: {argb:'000'}},
-        right: {style:'medium', color: {argb:'000'}}
-    };
-
-    ws.getCell(cell).font = {
-        bold: true,
-        color: { argb: 'FF0000'}
-    };
-}
-
-function setWidth(ws){
-    ws.columns = [
-        { header: '', key: 'A', width: 7 },
-        { header: '', key: 'B', width: 19 },
-        { header: '', key: 'C', width: 22 },
-        { header: '', key: 'D', width: 22 },
-        { header: '', key: 'E', width: 7 },
-        { header: '', key: 'F', width: 9 },
-        { header: '', key: 'G', width: 8 },
-        { header: '', key: 'H', width: 11 },
-        { header: '', key: 'I', width: 11 },
-        { header: '', key: 'J', width: 11 },
-        { header: '', key: 'K', width: 9 },
-        { header: '', key: 'L', width: 9 },
-        { header: '', key: 'M', width: 9 },
-        { header: '', key: 'N', width: 9 },
-        { header: '', key: 'O', width: 9 },
-        { header: '', key: 'P', width: 9 }
-    ];
-
-}
-
-function getIndexStyle(ws, index, i){
-    ws.getCell(index).value = i;
-
-        ws.getCell(index).alignment = {
-            vertical: 'middle', horizontal: 'center',
-            wrapText: true
-        };
-
-        ws.getCell(index).border = {
-            top: {style:'thin', color: {argb:'000'}},
-            left: {style:'thin', color: {argb:'000'}},
-            bottom: {style:'thin', color: {argb:'000'}},
-            right: {style:'thin', color: {argb:'000'}}
-        };
-
-        ws.getCell(index).font = {
-            color: { argb: '000000'}
-        }
-}
-
-function getLastRowStyle(ws, cell, align){
-    ws.getCell(cell).alignment = {
-        vertical: 'middle', horizontal: align,
-        wrapText: true
-    };
-
-    ws.getCell(cell).border = {
-        top: {style:'medium', color: {argb:'000'}},
-        left: {style:'medium', color: {argb:'000'}},
-        bottom: {style:'medium', color: {argb:'000'}},
-        right: {style:'medium', color: {argb:'000'}}
-    };
-
-    ws.getCell(cell).font = {
-        bold: true
-    };
-}
-
-function excelToJson(workbook){
-    const excelData = [];
-    let excelTitles = [];
-    workbook.worksheets[0].eachRow((row, rowNumber) => {
-        if (rowNumber > 0) {
-            let rowValues = row.values;
-            rowValues.shift();
-            if (rowNumber === 1) excelTitles = rowValues;
-            else {
-                let rowObject = {}
-                for (let i = 0; i < excelTitles.length; i++) {
-                    let title = excelTitles[i];
-                    let value = rowValues[i] ? rowValues[i] : '';
-                    rowObject[title] = value;
-                }
-                excelData.push(rowObject);
-            }
-        }
-    })
-    return excelData;
-}
-
-function getPSV(excelData){
-    var p = 0, s = 0, v = 0;
-
-    excelData.map((item) => {
-        p += item.PlaniraniSatiPredavanja != '' ? parseInt(item.PlaniraniSatiPredavanja) : 0;
-        s += item.PlaniraniSatiSeminari != '' ? parseInt(item.PlaniraniSatiSeminari) : 0;
-        v += item.PlaniraniSatiVjezbe != '' ? parseInt(item.PlaniraniSatiVjezbe) : 0;
-    })
-    return [p, s, v];
-}
 /**************************** drugi zadatak **********************************/
 
 app.post('/createExcel', cors(), async (req, res)=>{
@@ -583,6 +414,178 @@ app.post('/createExcel', cors(), async (req, res)=>{
             }
         });
     })
+
+/*** style and function  ***/
+function getColumn1Style(ws, cell){
+    ws.getCell(cell).alignment = {
+        vertical: 'middle', horizontal: 'center',
+        wrapText: true
+    };
+
+    ws.getCell(cell).border = {
+        top: {style:'medium', color: {argb:'000'}},
+        left: {style:'medium', color: {argb:'000'}},
+        bottom: {style:'medium', color: {argb:'000'}},
+        right: {style:'medium', color: {argb:'000'}}
+      };
+
+    ws.getCell(cell).fill = {
+        type: 'pattern',
+        pattern:'solid',
+        fgColor:{argb:'eeeeee'}
+    };
+
+    ws.getCell(cell).font = {
+        bold: true
+    };
+}
+
+function getRow1Style(ws, cell, align){
+    ws.getCell(cell).alignment = {
+        vertical: 'middle', horizontal: align,
+        wrapText: true
+    };
+
+    ws.getCell(cell).border = {
+        bottom: {style:'medium', color: {argb:'000'}},
+        right: {style:'thin', color: {argb:'000'}}
+      };
+
+    ws.getCell(cell).font = {
+        color: { argb: 'FF0000'}
+    };
+}
+
+function getRow2Style(ws, cell, align){
+    ws.getCell(cell).alignment = {
+        vertical: 'middle', horizontal: align,
+        wrapText: true
+    };
+
+    ws.getCell(cell).border = {
+        top: {style:'thin', color: {argb:'000'}},
+        left: {style:'thin', color: {argb:'000'}},
+        bottom: {style:'thin', color: {argb:'000'}},
+        right: {style:'thin', color: {argb:'000'}}
+    };
+
+    ws.getCell(cell).font = {
+        color: { argb: 'FF0000'}
+    };
+}
+
+function getLastRow2Style(ws, cell, align){
+    ws.getCell(cell).alignment = {
+        vertical: 'middle', horizontal: align,
+        wrapText: true
+    };
+
+    ws.getCell(cell).border = {
+        top: {style:'medium', color: {argb:'000'}},
+        left: {style:'medium', color: {argb:'000'}},
+        bottom: {style:'medium', color: {argb:'000'}},
+        right: {style:'medium', color: {argb:'000'}}
+    };
+
+    ws.getCell(cell).font = {
+        bold: true,
+        color: { argb: 'FF0000'}
+    };
+}
+
+function setWidth(ws){
+    ws.columns = [
+        { header: '', key: 'A', width: 7 },
+        { header: '', key: 'B', width: 19 },
+        { header: '', key: 'C', width: 22 },
+        { header: '', key: 'D', width: 22 },
+        { header: '', key: 'E', width: 7 },
+        { header: '', key: 'F', width: 9 },
+        { header: '', key: 'G', width: 8 },
+        { header: '', key: 'H', width: 11 },
+        { header: '', key: 'I', width: 11 },
+        { header: '', key: 'J', width: 11 },
+        { header: '', key: 'K', width: 9 },
+        { header: '', key: 'L', width: 9 },
+        { header: '', key: 'M', width: 9 },
+        { header: '', key: 'N', width: 9 },
+        { header: '', key: 'O', width: 9 },
+        { header: '', key: 'P', width: 9 }
+    ];
+
+}
+
+function getIndexStyle(ws, index, i){
+    ws.getCell(index).value = i;
+
+        ws.getCell(index).alignment = {
+            vertical: 'middle', horizontal: 'center',
+            wrapText: true
+        };
+
+        ws.getCell(index).border = {
+            top: {style:'thin', color: {argb:'000'}},
+            left: {style:'thin', color: {argb:'000'}},
+            bottom: {style:'thin', color: {argb:'000'}},
+            right: {style:'thin', color: {argb:'000'}}
+        };
+
+        ws.getCell(index).font = {
+            color: { argb: '000000'}
+        }
+}
+
+function getLastRowStyle(ws, cell, align){
+    ws.getCell(cell).alignment = {
+        vertical: 'middle', horizontal: align,
+        wrapText: true
+    };
+
+    ws.getCell(cell).border = {
+        top: {style:'medium', color: {argb:'000'}},
+        left: {style:'medium', color: {argb:'000'}},
+        bottom: {style:'medium', color: {argb:'000'}},
+        right: {style:'medium', color: {argb:'000'}}
+    };
+
+    ws.getCell(cell).font = {
+        bold: true
+    };
+}
+
+function excelToJson(workbook){
+    const excelData = [];
+    let excelTitles = [];
+    workbook.worksheets[0].eachRow((row, rowNumber) => {
+        if (rowNumber > 0) {
+            let rowValues = row.values;
+            rowValues.shift();
+            if (rowNumber === 1) excelTitles = rowValues;
+            else {
+                let rowObject = {}
+                for (let i = 0; i < excelTitles.length; i++) {
+                    let title = excelTitles[i];
+                    let value = rowValues[i] ? rowValues[i] : '';
+                    rowObject[title] = value;
+                }
+                excelData.push(rowObject);
+            }
+        }
+    })
+    return excelData;
+}
+
+function getPSV(excelData){
+    var p = 0, s = 0, v = 0;
+
+    excelData.map((item) => {
+        p += item.PlaniraniSatiPredavanja != '' ? parseInt(item.PlaniraniSatiPredavanja) : 0;
+        s += item.PlaniraniSatiSeminari != '' ? parseInt(item.PlaniraniSatiSeminari) : 0;
+        v += item.PlaniraniSatiVjezbe != '' ? parseInt(item.PlaniraniSatiVjezbe) : 0;
+    })
+    return [p, s, v];
+}
+
 
 app.listen(port, ()=>{
     console.log("Running on port " + port); 
