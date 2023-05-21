@@ -187,7 +187,7 @@ function getRow1Style(ws, cell, align){
       };
 
     ws.getCell(cell).font = {
-        color: { argb: 'ff0000'}
+        color: { argb: '000000'}
     };
 }
 
@@ -205,7 +205,7 @@ function getRow2Style(ws, cell, align){
     };
 
     ws.getCell(cell).font = {
-        color: { argb: 'ff0000'}
+        color: { argb: '000000'}
     };
 }
 
@@ -270,249 +270,301 @@ function getLastRowStyle(ws, cell, align){
     };
 }
 
+function excelToJson(workbook){
+    const excelData = [];
+    let excelTitles = [];
+    workbook.worksheets[0].eachRow((row, rowNumber) => {
+        if (rowNumber > 0) {
+            let rowValues = row.values;
+            rowValues.shift();
+            if (rowNumber === 1) excelTitles = rowValues;
+            else {
+                let rowObject = {}
+                for (let i = 0; i < excelTitles.length; i++) {
+                    let title = excelTitles[i];
+                    let value = rowValues[i] ? rowValues[i] : '';
+                    rowObject[title] = value;
+                }
+                excelData.push(rowObject);
+            }
+        }
+    })
+    return excelData;
+}
+
+function getPSV(excelData){
+    var p = 0, s = 0, v = 0;
+
+    excelData.map((item) => {
+        p += item.PlaniraniSatiPredavanja != '' ? parseInt(item.PlaniraniSatiPredavanja) : 0;
+        s += item.PlaniraniSatiSeminari != '' ? parseInt(item.PlaniraniSatiSeminari) : 0;
+        v += item.PlaniraniSatiVjezbe != '' ? parseInt(item.PlaniraniSatiVjezbe) : 0;
+    })
+    return [p, s, v];
+}
 /**************************** drugi zadatak **********************************/
 
-
-app.post('/createExcel', cors(), (req, res)=>{
-    const fileName = 'nalog.xlsx';   
-    const wb = new excelJS.Workbook();
-    const ws = wb.addWorksheet('Sheet1');
-
-    setWidth(ws);
+app.post('/createExcel', cors(), async (req, res)=>{
+    let workbook = new excelJS.Workbook();
+    await workbook.xlsx.readFile("data.xlsx");
+    let worksheet = workbook.getWorksheet("List1");
+    const excelData = excelToJson(workbook);
     
-    const imageId = wb.addImage({ // adding logo
-        filename: `./logo.png`,
-        extension: 'png',
-    });
+    const subs = [];
+        excelData.map((item, i) => {
+            if (subs.includes(item.PredmetKratica) === false){
+                const fileName = item.PredmetKratica + '.xlsx';   
+                const wb = new excelJS.Workbook();
+                const ws = wb.addWorksheet('Sheet1');
+                
+                setWidth(ws);
 
-    ws.addImage(imageId, { tl: { col: 0, row:  0}, ext: { width: 170,height: 90 }});
+                const imageId = wb.addImage({ // adding logo
+                    filename: `./logo.png`,
+                    extension: 'png',
+                });
 
-    ws.mergeCells('A5:C5'); // adding subject 
-    ws.getCell('A5').value = {
-        'richText': [
-            {'font': {'color': {argb: '000000'}},'text': 'Predmet: '},
-            {'font': {'color': {argb: 'ff0000'}},'text': 'naziv predmeta sa sifrom'}
-        ]
-    }
+                ws.addImage(imageId, { tl: { col: 0, row:  0}, ext: { width: 170,height: 90 }});
 
-    ws.mergeCells('A6:I11'); // adding lorem ipsum
-    ws.getCell('A6').value = {
-        'richText': [
-            {'font': {'size': 14,'color': {argb: '000000'}, bold: true, 'alignment': {'vertical': 'middle', 'horizontal': 'center'}},'text': 'NALOG ZA ISPLATU\r\n'},
-            {'font': {'color': {argb: '000000'}},'text': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'}
-        ]
-    };
-    ws.getCell(`A6`).alignment = {
-        vertical: 'middle', horizontal: 'left',
-        wrapText: true
-    };
+                ws.mergeCells('A5:C5'); // adding subject 
+                ws.getCell('A5').value = {
+                    'richText': [
+                        {'font': {'color': {argb: '000000'}},'text': 'Predmet: '},
+                        {'font': {'color': {argb: '000000'}},'text': item.PredmetKratica + ' ' + item.PredmetNaziv}
+                    ]
+                }
 
-    /*tablica*/
+                ws.mergeCells('A6:I11'); // adding lorem ipsum
+                ws.getCell('A6').value = {
+                    'richText': [
+                        {'font': {'size': 14,'color': {argb: '000000'}, bold: true},'alignment': {'vertical': 'middle', 'horizontal': 'center'},'text': 'NALOG ZA ISPLATU\r\n'},
+                        {'font': {'color': {argb: '000000'}},'text': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'}
+                    ]
+                };
+                ws.getCell(`A6`).alignment = {
+                    vertical: 'middle', horizontal: 'left',
+                    wrapText: true
+                };
 
-    ws.mergeCells('A12:B12');
-    ws.getCell('A12').value = 'Katedra';
-    getColumn1Style(ws, 'A12');
+                /*tablica*/
 
-    ws.getCell('C12').value = 'Studij';
-    getColumn1Style(ws, 'C12');
+                ws.mergeCells('A12:B12');
+                ws.getCell('A12').value = 'Katedra';
+                getColumn1Style(ws, 'A12');
 
-    ws.getCell('D12').value = 'ak. god.';
-    getColumn1Style(ws, 'D12');
+                ws.getCell('C12').value = 'Studij';
+                getColumn1Style(ws, 'C12');
 
-    ws.getCell('E12').value = 'stud. god.';
-    getColumn1Style(ws, 'E12');
+                ws.getCell('D12').value = 'ak. god.';
+                getColumn1Style(ws, 'D12');
 
-    ws.getCell('F12').value = 'početak turnusa';
-    getColumn1Style(ws, 'F12');
+                ws.getCell('E12').value = 'stud. god.';
+                getColumn1Style(ws, 'E12');
 
-    ws.getCell('G12').value = 'kraj turnusa';
-    getColumn1Style(ws, 'G12');
+                ws.getCell('F12').value = 'početak turnusa';
+                getColumn1Style(ws, 'F12');
 
-    ws.mergeCells('H12:I12');
-    ws.getCell('H12').value = 'br sati predviđen programom';
-    getColumn1Style(ws, 'H12');
+                ws.getCell('G12').value = 'kraj turnusa';
+                getColumn1Style(ws, 'G12');
 
-    const row = ws.getRow(12);
-    row.height = 75;
+                ws.mergeCells('H12:I12');
+                ws.getCell('H12').value = 'br sati predviđen programom';
+                getColumn1Style(ws, 'H12');
 
-    ws.mergeCells('A13:B13');
-    ws.getCell('A13').value = 'Katedra';
-    getRow1Style(ws, 'A13', "center");
+                const row = ws.getRow(12);
+                row.height = 75;
 
-    ws.getCell('C13').value = 'Studiji';
-    getRow1Style(ws, 'C13', "left");
+                ws.mergeCells('A13:B13');
+                ws.getCell('A13').value = item.Katedra;
+                getRow1Style(ws, 'A13', "center");
 
-    ws.getCell('D13').value = '2022./2023.';
-    getRow1Style(ws, 'D13', "left");
+                ws.getCell('C13').value = item.Studij;
+                getRow1Style(ws, 'C13', "left");
 
-    ws.getCell('E13').value = 'npr. 1';
-    getRow1Style(ws, 'E13', "left");
+                ws.getCell('D13').value = item.SkolskaGodinaNaziv;
+                getRow1Style(ws, 'D13', "left");
 
-    ws.getCell('F13').value = 'datum';
-    getRow1Style(ws, 'F13', "left");
+                ws.getCell('E13').value = item.PKSkolskaGodina;
+                getRow1Style(ws, 'E13', "left");
 
-    ws.getCell('G13').value = 'datum';
-    getRow1Style(ws, 'G13', "left");
+                //ws.getCell('F13').value = 'datum';
+                getRow1Style(ws, 'F13', "left");
 
-    ws.mergeCells('H13:I13');
-    ws.getCell('H13').value = {
-        'richText': [
-            {'text': 'P:'},
-            {'font': {'color': {argb: 'FF0000'}},'text': ' XY'},
-            {'text': ' S:'},
-            {'font': {'color': {argb: 'FF0000'}},'text': ' XY'},
-            {'text': ' V:'},
-            {'font': {'color': {argb: 'FF0000'}},'text': ' XY'}
-        ]
-    };
+                //ws.getCell('G13').value = 'datum';
+                getRow1Style(ws, 'G13', "left");
 
-    ws.getCell('H13').alignment = {
-        vertical: 'middle', horizontal: 'center',
-        wrapText: true
-    };
+                ws.mergeCells('H13:I13');
+                ws.getCell('H13').value = {
+                    'richText': [
+                        {'text': 'P:'},
+                        {'font': {'color': {argb: '000000'}},'text': getPSV(excelData)[0]},
+                        {'text': ' S:'},
+                        {'font': {'color': {argb: '000000'}},'text': getPSV(excelData)[1]},
+                        {'text': ' V:'},
+                        {'font': {'color': {argb: '000000'}},'text': getPSV(excelData)[2]}
+                    ]
+                };
 
-    ws.getCell('H13').border = {
-        bottom: {style:'medium', color: {argb:'000'}},
-        right: {style:'medium', color: {argb:'000'}}
-    };
+                ws.getCell('H13').alignment = {
+                    vertical: 'middle', horizontal: 'center',
+                    wrapText: true
+                };
 
-    ws.mergeCells('A15:A16');
-    ws.getCell('A15').value = 'Redni broj';
-    getColumn1Style(ws, 'A15');
+                ws.getCell('H13').border = {
+                    bottom: {style:'medium', color: {argb:'000'}},
+                    right: {style:'medium', color: {argb:'000'}}
+                };
 
-    ws.mergeCells('B15:B16');
-    ws.getCell('B15').value = 'Nastavnik/Suradnik';
-    getColumn1Style(ws, 'B15');
+                ws.mergeCells('A15:A16');
+                ws.getCell('A15').value = 'Redni broj';
+                getColumn1Style(ws, 'A15');
 
-    ws.mergeCells('C15:C16');
-    ws.getCell('C15').value = 'Zvanje';
-    getColumn1Style(ws, 'C15');
+                ws.mergeCells('B15:B16');
+                ws.getCell('B15').value = 'Nastavnik/Suradnik';
+                getColumn1Style(ws, 'B15');
 
-    ws.mergeCells('D15:D16');
-    ws.getCell('D15').value = 'Status';
-    getColumn1Style(ws, 'D15');
+                ws.mergeCells('C15:C16');
+                ws.getCell('C15').value = 'Zvanje';
+                getColumn1Style(ws, 'C15');
 
-    ws.mergeCells('E15:G15');
-    ws.getCell('E15').value = 'Sati nastave';
-    getColumn1Style(ws, 'E15');
-    ws.getCell('E16').value = 'pred';
-    getColumn1Style(ws, 'E16');
-    ws.getCell('F16').value = 'sem';
-    getColumn1Style(ws, 'F16');
-    ws.getCell('G16').value = 'vjež';
-    getColumn1Style(ws, 'G16');
+                ws.mergeCells('D15:D16');
+                ws.getCell('D15').value = 'Status';
+                getColumn1Style(ws, 'D15');
 
-    ws.mergeCells('H15:H16');
-    ws.getCell('H15').value = 'Bruto satnica predavanja (EUR)';
-    getColumn1Style(ws, 'H15');
+                ws.mergeCells('E15:G15');
+                ws.getCell('E15').value = 'Sati nastave';
+                getColumn1Style(ws, 'E15');
+                ws.getCell('E16').value = 'pred';
+                getColumn1Style(ws, 'E16');
+                ws.getCell('F16').value = 'sem';
+                getColumn1Style(ws, 'F16');
+                ws.getCell('G16').value = 'vjež';
+                getColumn1Style(ws, 'G16');
 
-    ws.mergeCells('I15:I16');
-    ws.getCell('I15').value = 'Bruto satnica seminar (EUR)';
-    getColumn1Style(ws, 'I15');
+                ws.mergeCells('H15:H16');
+                ws.getCell('H15').value = 'Bruto satnica predavanja (EUR)';
+                getColumn1Style(ws, 'H15');
 
-    ws.mergeCells('J15:J16');
-    ws.getCell('J15').value = 'Bruto satnica vježbe (EUR)';
-    getColumn1Style(ws, 'J15');
+                ws.mergeCells('I15:I16');
+                ws.getCell('I15').value = 'Bruto satnica seminar (EUR)';
+                getColumn1Style(ws, 'I15');
 
-    ws.mergeCells('K15:M15');
-    ws.getCell('K15').value = 'Bruto iznos';
-    getColumn1Style(ws, 'K15');
-    ws.getCell('K16').value = 'pred';
-    getColumn1Style(ws, 'K16');
-    ws.getCell('L16').value = 'sem';
-    getColumn1Style(ws, 'L16');
-    ws.getCell('M16').value = 'vjež';
-    getColumn1Style(ws, 'M16');
+                ws.mergeCells('J15:J16');
+                ws.getCell('J15').value = 'Bruto satnica vježbe (EUR)';
+                getColumn1Style(ws, 'J15');
 
-    ws.mergeCells('N15:N16');
-    ws.getCell('N15').value = 'Ukupno za isplatu (EUR)';
-    getColumn1Style(ws, 'N15');
-    const row2 = ws.getRow(16);
-    row2.height = 105;
+                ws.mergeCells('K15:M15');
+                ws.getCell('K15').value = 'Bruto iznos';
+                getColumn1Style(ws, 'K15');
+                ws.getCell('K16').value = 'pred';
+                getColumn1Style(ws, 'K16');
+                ws.getCell('L16').value = 'sem';
+                getColumn1Style(ws, 'L16');
+                ws.getCell('M16').value = 'vjež';
+                getColumn1Style(ws, 'M16');
 
-    var index = 17;
-    // for 
-    for(let i = 1; i < 9; i++){
-        ws.getCell('A' + index).value = i; // 1.
-        getIndexStyle(ws, 'A' + index, i);
+                ws.mergeCells('N15:N16');
+                ws.getCell('N15').value = 'Ukupno za isplatu (EUR)';
+                getColumn1Style(ws, 'N15');
+                const row2 = ws.getRow(16);
+                row2.height = 105;
 
-        getRow1Style(ws, 'B' + index, "left");
-        getRow1Style(ws, 'C' + index, "left");
-        getRow1Style(ws, 'D' + index, "left");
-        getRow1Style(ws, 'E' + index, "center");
-        getRow1Style(ws, 'F' + index, "center");
-        getRow1Style(ws, 'G' + index, "center");
-        getRow1Style(ws, 'H' + index, "left");
-        getRow1Style(ws, 'I' + index, "left");
-        getRow1Style(ws, 'J' + index, "left");
-        getRow1Style(ws, 'K' + index, "right");
-        getRow1Style(ws, 'L' + index, "right");
-        getRow1Style(ws, 'M' + index, "right");
-        getRow1Style(ws, 'N' + index, "right");
-        
-        index++;
-    }
+                var index = 17;
+                var ukupnoPredavanja = 0, ukupnoSeminari = 0, ukupnoVjezbe = 0;
+                excelData.map((it, i) => {
+                    ws.getCell('A' + index).value = i + 1; // 1.
+                    getIndexStyle(ws, 'A' + index, i + 1);
+                    getRow2Style(ws, 'B' + index, "left");
+                    ws.getCell('B' + index).value = it.NastavnikSuradnikNaziv;
+                    getRow2Style(ws, 'C' + index, "left");
+                    ws.getCell('C' + index).value = it.ZvanjeNaziv;
+                    getRow2Style(ws, 'D' + index, "left");
+                    ws.getCell('D' + index).value = it.NazivNastavnikStatus;
+                    getRow2Style(ws, 'E' + index, "center");
+                    ws.getCell('E' + index).value = it.RealiziraniSatiPredavanja != '' ? it.RealiziraniSatiPredavanja : 0;
+                    ukupnoPredavanja += it.RealiziraniSatiPredavanja != '' ? parseInt(it.RealiziraniSatiPredavanja) : 0;
+                    getRow2Style(ws, 'F' + index, "center");
+                    ws.getCell('F' + index).value = it.RealiziraniSatiSeminari != '' ? it.RealiziraniSatiSeminari : 0;
+                    ukupnoSeminari += it.RealiziraniSatiSeminari != '' ? parseInt(it.RealiziraniSatiSeminari) : 0;
+                    getRow2Style(ws, 'G' + index, "center");
+                    ws.getCell('G' + index).value = it.RealiziraniSatiVjezbe != '' ? it.RealiziraniSatiVjezbe : 0;
+                    ukupnoVjezbe += it.RealiziraniSatiVjezbe != '' ? parseInt(it.RealiziraniSatiVjezbe) : 0;
+                    getRow2Style(ws, 'H' + index, "left");
+                    getRow2Style(ws, 'I' + index, "left");
+                    getRow2Style(ws, 'J' + index, "left");
+                    getRow2Style(ws, 'K' + index, "right");
+                    getRow2Style(ws, 'L' + index, "right");
+                    getRow2Style(ws, 'M' + index, "right");
+                    getRow2Style(ws, 'N' + index, "right");
+                    index++;
+                })
 
-    ws.mergeCells('A' + index + ':C' + index);
-    ws.getCell('A' + index + ':C' + index).value = 'UKUPNO';
-    getLastRowStyle(ws, 'A' + index + ':C' + index, "center");
+                ws.mergeCells('A' + index + ':C' + index);
+                ws.getCell('A' + index + ':C' + index).value = 'UKUPNO';
+                getLastRowStyle(ws, 'A' + index + ':C' + index, "center");
 
-    getLastRowStyle(ws, 'D' + index, "center");
+                getLastRowStyle(ws, 'D' + index, "center");
 
-    getLastRowStyle(ws, 'E' + index, "center");
-    getLastRowStyle(ws, 'F' + index, "center");
-    getLastRowStyle(ws, 'G' + index, "center");
-    getLastRowStyle(ws, 'H' + index, "center");
-    getLastRowStyle(ws, 'I' + index, "center");
-    getLastRowStyle(ws, 'J' + index, "center");
-    getLastRowStyle(ws, 'K' + index, "right");
-    getLastRowStyle(ws, 'L' + index, "right");
-    getLastRowStyle(ws, 'M' + index, "right");
-    getLastRowStyle(ws, 'N' + index, "right");
-	
-    ws.mergeCells('A' + (index + 3) +':C' + (index + 4));
-    ws.getCell('A' + (index + 3)).value = {
-        'richText': [
-            {'text': 'Prodekanica za nastavu i studentska pitanja\r\nProf. dr. sc.'},
-            {'font': {'color': {argb: 'FF0000'}},'text': ' Ime Prezime'}
-        ]
-    };
-    ws.getCell('A' + (index + 3)).alignment = {
-        vertical: 'middle', horizontal: 'left',
-        wrapText: true
-    };
+                getLastRowStyle(ws, 'E' + index, "center");
+                ws.getCell('E' + index).value = ukupnoPredavanja;
+                getLastRowStyle(ws, 'F' + index, "center");
+                ws.getCell('F' + index).value = ukupnoSeminari;
+                getLastRowStyle(ws, 'G' + index, "center");
+                ws.getCell('G' + index).value = ukupnoVjezbe;
+                getLastRowStyle(ws, 'H' + index, "center");
+                getLastRowStyle(ws, 'I' + index, "center");
+                getLastRowStyle(ws, 'J' + index, "center");
+                getLastRowStyle(ws, 'K' + index, "right");
+                getLastRowStyle(ws, 'L' + index, "right");
+                getLastRowStyle(ws, 'M' + index, "right");
+                getLastRowStyle(ws, 'N' + index, "right");
 
-    ws.mergeCells('A' + (index + 9) +':C' + (index + 10));
-    ws.getCell('A' + (index + 9)).value = {
-        'richText': [
-            {'text': 'Prodekan za financije i upravljanje\r\nProf. dr. sc.'},
-            {'font': {'color': {argb: 'FF0000'}},'text': ' Ime Prezime'}
-        ]
-    };
+                ws.mergeCells('A' + (index + 3) +':C' + (index + 4));
+                ws.getCell('A' + (index + 3)).value = {
+                    'richText': [
+                        {'text': 'Prodekanica za nastavu i studentska pitanja\r\nProf. dr. sc.'},
+                        {'font': {'color': {argb: 'FF0000'}},'text': ' Ime Prezime'}
+                    ]
+                };
+                ws.getCell('A' + (index + 3)).alignment = {
+                    vertical: 'middle', horizontal: 'left',
+                    wrapText: true
+                };
 
-    ws.getCell(`A` + (index + 9)).alignment = {
-        vertical: 'middle', horizontal: 'left',
-        wrapText: true
-    };
+                ws.mergeCells('A' + (index + 9) +':C' + (index + 10));
+                ws.getCell('A' + (index + 9)).value = {
+                    'richText': [
+                        {'text': 'Prodekan za financije i upravljanje\r\nProf. dr. sc.'},
+                        {'font': {'color': {argb: 'FF0000'}},'text': ' Ime Prezime'}
+                    ]
+                };
 
-    ws.mergeCells('J' + (index + 9) +':L' + (index + 10));
-    ws.getCell('J' + (index + 9)).value = {
-        'richText': [
-            {'text': 'Dekan\r\nProf. dr. sc.'},
-            {'font': {'color': {argb: 'FF0000'}},'text': ' Ime Prezime'}
-        ]
-    };
-    ws.getCell(`J` + (index + 9)).alignment = {
-        vertical: 'middle', horizontal: 'left',
-        wrapText: true
-    };
+                ws.getCell(`A` + (index + 9)).alignment = {
+                    vertical: 'middle', horizontal: 'left',
+                    wrapText: true
+                };
 
-    wb.xlsx.writeFile(fileName).then(() => {
-        console.log('File created');
-    }).catch(err => {
-        console.log(err.message);
-    });
-})
+                ws.mergeCells('J' + (index + 9) +':L' + (index + 10));
+                ws.getCell('J' + (index + 9)).value = {
+                    'richText': [
+                        {'text': 'Dekan\r\nProf. dr. sc.'},
+                        {'font': {'color': {argb: 'FF0000'}},'text': ' Ime Prezime'}
+                    ]
+                };
+                ws.getCell(`J` + (index + 9)).alignment = {
+                    vertical: 'middle', horizontal: 'left',
+                    wrapText: true
+                };
+
+                subs.push(item.PredmetKratica);
+                wb.xlsx.writeFile(fileName).then(() => {
+                    console.log('File created');
+                }).catch(err => {
+                    console.log(err.message);
+                });
+            }
+        });
+    })
 
 app.listen(port, ()=>{
     console.log("Running on port " + port); 
