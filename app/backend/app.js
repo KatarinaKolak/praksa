@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import fs from'fs';
 import excelJS from 'exceljs';
+import { parse } from 'path';
 const app = express();
 const port = 3000;
 
@@ -179,7 +180,7 @@ app.post('/createExcel', cors(), async (req, res)=>{
                 ws.getCell('A5').value = {
                     'richText': [
                         {'font': {'color': {argb: '000000'}},'text': 'Predmet: '},
-                        {'font': {'color': {argb: 'FF0000'}},'text': item.PredmetKratica + ' ' + item.PredmetNaziv}
+                        {'font': {'color': {argb: '000000'}},'text': item.PredmetKratica + ' ' + item.PredmetNaziv}
                     ]
                 }
 
@@ -233,7 +234,7 @@ app.post('/createExcel', cors(), async (req, res)=>{
                 ws.getCell('D13').value = item.SkolskaGodinaNaziv;
                 getRow1Style(ws, 'D13', "left");
 
-                ws.getCell('E13').value = item.PKSkolskaGodina;
+                ws.getCell('E13').value = item.PkSkolskaGodina;
                 getRow1Style(ws, 'E13', "left");
 
                 //ws.getCell('F13').value = 'datum';
@@ -246,11 +247,11 @@ app.post('/createExcel', cors(), async (req, res)=>{
                 ws.getCell('H13').value = {
                     'richText': [
                         {'text': 'P:'},
-                        {'font': {'color': {argb: 'FF0000'}},'text': getPSV(excelData)[0]},
+                        {'font': {'color': {argb: '000000'}},'text': getPSV(excelData)[0]},
                         {'text': ' S:'},
-                        {'font': {'color': {argb: 'FF0000'}},'text': getPSV(excelData)[1]},
+                        {'font': {'color': {argb: '000000'}},'text': getPSV(excelData)[1]},
                         {'text': ' V:'},
-                        {'font': {'color': {argb: 'FF0000'}},'text': getPSV(excelData)[2]}
+                        {'font': {'color': {argb: '000000'}},'text': getPSV(excelData)[2]}
                     ]
                 };
 
@@ -342,9 +343,14 @@ app.post('/createExcel', cors(), async (req, res)=>{
                     getRow2Style(ws, 'I' + index, "left");
                     getRow2Style(ws, 'J' + index, "left");
                     getRow2Style(ws, 'K' + index, "right");
+                    ws.getCell('K' + index).value = {formula : 'E' + index + '*H' + index,  result: (ws.getCell('H' + index).value !== '' ? ws.getCell('H' + index).value : 0.00 + ws.getCell('E' + index).value) }
                     getRow2Style(ws, 'L' + index, "right");
+                    ws.getCell('L' + index).value = {formula : 'F' + index + '*I' + index,  result: (ws.getCell('I' + index).value !== '' ? ws.getCell('I' + index).value : 0.00 + ws.getCell('F' + index).value) }
                     getRow2Style(ws, 'M' + index, "right");
+                    ws.getCell('M' + index).value = {formula : 'G' + index + '*J' + index,  result: (ws.getCell('J' + index).value !== '' ? ws.getCell('J' + index).value : 0.00 + ws.getCell('G' + index).value) }
                     getRow2Style(ws, 'N' + index, "right");
+                    ws.getCell('N' + index).value = {formula : 'SUM(K' + index + ':M' + index + ')'}
+                
                     index++;
                 })
 
@@ -364,15 +370,18 @@ app.post('/createExcel', cors(), async (req, res)=>{
                 getLastRow2Style(ws, 'I' + index, "center");
                 getLastRow2Style(ws, 'J' + index, "center");
                 getLastRow2Style(ws, 'K' + index, "right");
+                ws.getCell('K' + index).value = {formula : 'SUM(K17:K' + (index - 1) + ')'}
                 getLastRow2Style(ws, 'L' + index, "right");
+                ws.getCell('L' + index).value = {formula : 'SUM(L17:L' + (index - 1) + ')'}
                 getLastRow2Style(ws, 'M' + index, "right");
+                ws.getCell('M' + index).value = {formula : 'SUM(M17:M' + (index - 1) + ')'}
                 getLastRow2Style(ws, 'N' + index, "right");
-
+                ws.getCell('N' + index).value = {formula : 'SUM(N17:N' + (index - 1) + ')'}
                 ws.mergeCells('A' + (index + 3) +':C' + (index + 4));
                 ws.getCell('A' + (index + 3)).value = {
                     'richText': [
                         {'text': 'Prodekanica za nastavu i studentska pitanja\r\nProf. dr. sc.'},
-                        {'font': {'color': {argb: 'FF0000'}},'text': ' Ime Prezime'}
+                        {'font': {'color': {argb: '000000'}},'text': ' Ime Prezime'}
                     ]
                 };
                 ws.getCell('A' + (index + 3)).alignment = {
@@ -384,7 +393,7 @@ app.post('/createExcel', cors(), async (req, res)=>{
                 ws.getCell('A' + (index + 9)).value = {
                     'richText': [
                         {'text': 'Prodekan za financije i upravljanje\r\nProf. dr. sc.'},
-                        {'font': {'color': {argb: 'FF0000'}},'text': ' Ime Prezime'}
+                        {'font': {'color': {argb: '000000'}},'text': ' Ime Prezime'}
                     ]
                 };
 
@@ -397,7 +406,7 @@ app.post('/createExcel', cors(), async (req, res)=>{
                 ws.getCell('J' + (index + 9)).value = {
                     'richText': [
                         {'text': 'Dekan\r\nProf. dr. sc.'},
-                        {'font': {'color': {argb: 'FF0000'}},'text': ' Ime Prezime'}
+                        {'font': {'color': {argb: '000000'}},'text': ' Ime Prezime'}
                     ]
                 };
                 ws.getCell(`J` + (index + 9)).alignment = {
@@ -452,7 +461,7 @@ function getRow1Style(ws, cell, align){
       };
 
     ws.getCell(cell).font = {
-        color: { argb: 'FF0000'}
+        color: { argb: '000000'}
     };
 }
 
@@ -470,7 +479,7 @@ function getRow2Style(ws, cell, align){
     };
 
     ws.getCell(cell).font = {
-        color: { argb: 'FF0000'}
+        color: { argb: '000000'}
     };
 }
 
@@ -489,7 +498,7 @@ function getLastRow2Style(ws, cell, align){
 
     ws.getCell(cell).font = {
         bold: true,
-        color: { argb: 'FF0000'}
+        color: { argb: '000000'}
     };
 }
 
